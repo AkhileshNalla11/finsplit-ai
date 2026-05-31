@@ -26,17 +26,19 @@ def _restaurant_extraction():
 
 
 def test_restaurant_balances_and_is_correct():
+    # Tax (600) is split EQUALLY: 120 each. Food shares differ by what each ate.
     r = calculator.compute_split(_restaurant_extraction())
     assert r["totalBill"] == 4900
     assert sum(r["perPerson"].values()) == 4900, r["perPerson"]
     pp = r["perPerson"]
-    # ±1 rounding may land on any tied share, so assert tight ranges + relationships.
-    assert pp["Akhilesh"] in (859, 860)
-    assert pp["Rujula"] in (859, 860)
-    assert pp["Shobhit"] in (1259, 1260)  # highest: food share + own beer + tax
-    assert pp["Dhruv"] in (761, 762)
-    assert pp["Kritik"] in (1161, 1162)
-    # Veg-only diners pay LESS than the veg+nonveg trio (smaller food + tax base).
+    # Veg-only diners: own veg share (650) + equal tax (120), + beer for Kritik.
+    assert pp["Dhruv"] == 770          # 650 + 120
+    assert pp["Kritik"] == 1170        # 650 + 400 beer + 120
+    # Veg+nonveg trio: ~733 food + 120 tax (±1 rounding on the tied food share).
+    assert pp["Akhilesh"] in (853, 854)
+    assert pp["Rujula"] in (853, 854)
+    assert pp["Shobhit"] in (1253, 1254)  # + own beer 400
+    # Veg-only diners pay LESS than the veg+nonveg trio (smaller food, equal tax).
     assert pp["Dhruv"] < pp["Akhilesh"] and pp["Kritik"] < pp["Shobhit"]
 
 
@@ -63,20 +65,23 @@ def test_rounding_reconciles_to_total():
     assert sorted(r["perPerson"].values()) == [33, 33, 34]
 
 
-def test_proportional_with_zero_food_base_splits_equally():
-    # Everything is drinks + tax → no food base → tax splits equally.
+def test_fixed_tax_splits_equally():
+    # A fixed tax/service amount is split equally among the people it applies to.
     r = calculator.compute_split({
-        "people": ["A", "B"],
+        "people": ["A", "B", "C"],
         "items": [
-            {"label": "Beers", "total": 200, "sharedBy": ["A", "B"],
-             "category": "drinks", "split": "equal"},
-            {"label": "Tax", "total": 50, "sharedBy": ["A", "B"],
+            {"label": "Food", "total": 900, "sharedBy": ["A", "B"],
+             "category": "nonveg", "split": "equal"},
+            {"label": "Side", "total": 300, "sharedBy": ["C"],
+             "category": "nonveg", "split": "equal"},
+            {"label": "Service", "total": 120, "sharedBy": ["A", "B", "C"],
              "category": "tax", "split": "proportional"},
         ],
         "assumptions": [], "oneLiner": "",
     })
-    assert r["totalBill"] == 250
-    assert r["perPerson"] == {"A": 125, "B": 125}
+    # Service 120 split equally = 40 each (NOT weighted by the 450/450/300 food spend).
+    assert r["totalBill"] == 1320
+    assert r["perPerson"] == {"A": 490, "B": 490, "C": 340}
 
 
 def test_single_payer():
@@ -274,8 +279,9 @@ def test_percentage_excludes_items_not_in_appliesTo():
     assert r["perPerson"] == {"A": 840, "B": 840}
 
 
-def test_percentage_borne_proportional_to_base_share():
-    # GST on the hotel, but A used the expensive room and B the cheap one.
+def test_percentage_split_equally_among_base_consumers():
+    # A used the expensive room and B the cheap one, but GST is split EQUALLY
+    # between the two of them (not weighted by room cost).
     r = calculator.compute_split({
         "people": ["A", "B"],
         "items": [
@@ -288,9 +294,9 @@ def test_percentage_borne_proportional_to_base_share():
         ],
         "assumptions": [], "oneLiner": "",
     })
-    # GST = 10% of 4000 = 400, split 300/100 by room share → A=3300, B=1100.
+    # GST = 10% of 4000 = 400, split equally → 200 each → A=3200, B=1200.
     assert r["totalBill"] == 4400
-    assert r["perPerson"] == {"A": 3300, "B": 1100}
+    assert r["perPerson"] == {"A": 3200, "B": 1200}
 
 
 def test_percentage_with_group_payer_settles():

@@ -28,8 +28,8 @@ only the group-funded items generate transactions.
 
 Percentage items carry a `rate` (18% may be given as 0.18 or 18) and `appliesTo`
 (labels of the base items). The calculator computes the amount = base × rate and
-distributes it in proportion to each person's share of those base items — so GST on
-the hotel is borne by whoever used the hotel, in proportion to their room cost.
+splits it EQUALLY among the people who consumed those base items — tax and service
+charges are shared evenly, the way most groups actually settle them.
 
 `coveredBy` (optional, on any fixed item) is a {consumer: giver} map for GIFTS — a
 giver absorbs the consumer's share as a treat. The consumer owes nothing for it and
@@ -44,11 +44,6 @@ Output adds the computed numeric fields the frontend renders
 from __future__ import annotations
 
 import math
-
-# Categories excluded from the "food base" that weights proportional (tax/
-# service) charges — matching the rule "proportional to each person's food
-# subtotal". Drinks and the tax itself don't count toward the base.
-_FOOD_BASE_EXCLUDED = {"drinks", "tax"}
 
 
 def _num(value, field: str) -> float:
@@ -140,14 +135,13 @@ def compute_split(extraction: dict) -> dict:
         raise ValueError("extraction.items must be a non-empty list")
 
     people = _people_from(extraction)
-    food_base: dict[str, float] = {p: 0.0 for p in people}
     # Per-item {person: share}, so settlement can attribute each item to its payer.
     allocs: list[dict[str, float]] = [{} for _ in items]
     # Each item's amount (given for fixed items, computed for percentage items).
     totals: list[float] = [0.0 for _ in items]
     is_pct = [_is_percentage(it) for it in items]
 
-    # Pass 1 — fixed equal items: even share per person, and accumulate the food base.
+    # Pass 1 — fixed equal items: even share per person.
     # A gifted share (coveredBy) is borne by the giver, not the consumer.
     for idx, item in enumerate(items):
         if is_pct[idx] or str(item.get("split") or "equal").lower() == "proportional":
@@ -155,7 +149,6 @@ def compute_split(extraction: dict) -> dict:
         label = item.get("label", "item")
         total = _num(item.get("total"), f"item '{label}'.total")
         shared = [n for n in (item.get("sharedBy") or []) if isinstance(n, str)]
-        category = str(item.get("category") or "other").lower()
         if not shared:
             raise ValueError(f"item '{label}' has no one in sharedBy")
         covers = _covered_by(item)
@@ -164,10 +157,10 @@ def compute_split(extraction: dict) -> dict:
         for p in shared:
             bearer = covers.get(p, p)  # giver bears a gifted share; else the consumer
             allocs[idx][bearer] = allocs[idx].get(bearer, 0.0) + share
-            if category not in _FOOD_BASE_EXCLUDED:
-                food_base[bearer] += share
 
-    # Pass 2 — fixed proportional items: allocate weighted by food base (equal if none).
+    # Pass 2 — fixed tax/service items (split=="proportional"): split EQUALLY among
+    # those it applies to. "Proportional" in the schema just means "apply to everyone
+    # in sharedBy" — the per-person amount is always equal, not weighted by food spend.
     for idx, item in enumerate(items):
         if is_pct[idx] or str(item.get("split") or "equal").lower() != "proportional":
             continue
@@ -176,33 +169,31 @@ def compute_split(extraction: dict) -> dict:
         shared = [n for n in (item.get("sharedBy") or []) if isinstance(n, str)]
         covers = _covered_by(item)
         targets = shared or people
-        base_sum = sum(food_base.get(p, 0.0) for p in targets)
+        share = total / len(targets)
         for p in targets:
-            v = total * food_base.get(p, 0.0) / base_sum if base_sum > 0 else total / len(targets)
             bearer = covers.get(p, p)
-            allocs[idx][bearer] = allocs[idx].get(bearer, 0.0) + v
+            allocs[idx][bearer] = allocs[idx].get(bearer, 0.0) + share
 
-    # Pass 3 — percentage items: amount = base × rate, borne in proportion to each
-    # person's share of the base items (equal split if the base has no consumers).
+    # Pass 3 — percentage items: amount = base × rate, split EQUALLY among the
+    # distinct people who consumed those base items.
     for idx, item in enumerate(items):
         if not is_pct[idx]:
             continue
         base_idxs = _base_indices(item, items, is_pct)
         amount = round(sum(totals[b] for b in base_idxs) * _rate_fraction(item))
         totals[idx] = amount
-        weight: dict[str, float] = {}
+        # Collect the unique set of people who appear in the base items.
+        consumers: list[str] = []
+        seen: set[str] = set()
         for b in base_idxs:
-            for p, v in allocs[b].items():
-                weight[p] = weight.get(p, 0.0) + v
-        wsum = sum(weight.values())
-        if wsum > 0:
-            for p, w in weight.items():
-                a = amount * w / wsum
-                allocs[idx][p] = allocs[idx].get(p, 0.0) + a
-        else:
-            for p in people:
-                a = amount / len(people)
-                allocs[idx][p] = allocs[idx].get(p, 0.0) + a
+            for p in allocs[b]:
+                if p not in seen:
+                    seen.add(p)
+                    consumers.append(p)
+        targets = consumers or people
+        share = amount / len(targets)
+        for p in targets:
+            allocs[idx][p] = allocs[idx].get(p, 0.0) + share
 
     total_bill = round(sum(totals))
     # Reconcile EACH item's shares to integers summing to that item's total, then
