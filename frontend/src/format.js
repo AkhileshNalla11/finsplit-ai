@@ -22,10 +22,3 @@ function hash(str) {
   for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
   return h;
 }
-
-const VALID_CATEGORIES = ["veg", "nonveg", "drinks", "tax", "other"];
-
-export function badgeClass(category) {
-  const c = String(category || "other").toLowerCase();
-  return `badge badge-${VALID_CATEGORIES.includes(c) ? c : "other"}`;
-}

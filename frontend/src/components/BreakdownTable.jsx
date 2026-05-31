@@ -1,4 +1,4 @@
-import { rupees, badgeClass } from "../format.js";
+import { rupees } from "../format.js";
 
 function SharedBy({ sharedBy = [], gifted = [] }) {
   const giftedSet = new Set(gifted);
@@ -28,10 +28,7 @@ export default function BreakdownTable({ items = [], totalBill }) {
           <tbody>
             {items.map((item, i) => (
               <tr key={i}>
-                <td>
-                  <span className={badgeClass(item.category)}>{item.category}</span>{" "}
-                  {item.label}
-                </td>
+                <td>{item.label}</td>
                 <td className="shared-by">
                   <SharedBy sharedBy={item.sharedBy} gifted={item.gifted} />
                 </td>

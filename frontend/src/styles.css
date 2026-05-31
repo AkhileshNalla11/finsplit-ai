@@ -8,16 +8,6 @@
   --accent-soft: #eaf3ee;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 
-  /* category badge colors */
-  --badge-veg-bg: #e7f4ea;
-  --badge-veg-fg: #1f7a45;
-  --badge-nonveg-bg: #fdf0dc;
-  --badge-nonveg-fg: #9a6212;
-  --badge-drinks-bg: #f1eafb;
-  --badge-drinks-fg: #6b3fa0;
-  --badge-gray-bg: #eeeeec;
-  --badge-gray-fg: #5a5a5e;
-
   /* avatar palette (5 distinct colors, cycled per person) */
   --avatar-0: #2f6f4f;
   --avatar-1: #9a6212;
@@ -36,15 +26,6 @@
     --accent: #5bbd8a;
     --accent-soft: #1d2a23;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-
-    --badge-veg-bg: #16301f;
-    --badge-veg-fg: #6fd49a;
-    --badge-nonveg-bg: #33260f;
-    --badge-nonveg-fg: #e0a85a;
-    --badge-drinks-bg: #281c38;
-    --badge-drinks-fg: #c2a0ea;
-    --badge-gray-bg: #2a2a2c;
-    --badge-gray-fg: #aaaab0;
   }
 }
 
@@ -301,33 +282,6 @@ tbody tr:last-child td {
 .total-row td {
   font-weight: 700;
   border-top: 2px solid var(--border);
-}
-
-.badge {
-  display: inline-block;
-  padding: 2px 9px;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
-.badge-veg {
-  background: var(--badge-veg-bg);
-  color: var(--badge-veg-fg);
-}
-.badge-nonveg {
-  background: var(--badge-nonveg-bg);
-  color: var(--badge-nonveg-fg);
-}
-.badge-drinks {
-  background: var(--badge-drinks-bg);
-  color: var(--badge-drinks-fg);
-}
-.badge-tax,
-.badge-other {
-  background: var(--badge-gray-bg);
-  color: var(--badge-gray-fg);
 }
 
 .shared-by {
