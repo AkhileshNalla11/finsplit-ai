@@ -13,6 +13,7 @@ Both call Claude, expect raw JSON back, and retry once with a stricter
 instruction if the first response is not valid JSON.
 """
 
+import base64
 import json
 import logging
 import os
@@ -248,6 +249,42 @@ def _compute(extraction: dict) -> dict:
     except ValueError as exc:
         logger.error("Could not compute split from extraction: %s", exc)
         raise ClaudeError(f"Could not compute split: {exc}") from exc
+
+
+def extract_from_image(image_bytes: bytes, media_type: str) -> str:
+    """Use Claude Vision to read a receipt and return a plain English item list."""
+    client = _get_client()
+    image_data = base64.standard_b64encode(image_bytes).decode("utf-8")
+    prompt = (
+        "Read this receipt image carefully. "
+        "List every line item with its price, and any taxes, service charges, or tips. "
+        "Output plain English only — no JSON, no markdown, no extra commentary. Be concise."
+    )
+    try:
+        message = client.messages.create(
+            model=MODEL,
+            max_tokens=1024,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": media_type,
+                                "data": image_data,
+                            },
+                        },
+                        {"type": "text", "text": prompt},
+                    ],
+                }
+            ],
+        )
+    except anthropic.APIError as exc:
+        logger.error("Anthropic API error reading receipt: %s", exc)
+        raise ClaudeError(f"Failed to read receipt image: {exc}") from exc
+    return "".join(block.text for block in message.content if block.type == "text").strip()
 
 
 def parse_split(description: str) -> dict:

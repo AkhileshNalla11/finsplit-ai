@@ -10,7 +10,7 @@ import logging
 import os
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 import claude_service
@@ -48,6 +48,23 @@ def health():
 
 MAX_DESCRIPTION_CHARS = 2000
 MAX_CORRECTION_CHARS = 500
+MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"}
+
+
+@app.post("/api/read-receipt")
+async def read_receipt(file: UploadFile = File(...)):
+    if file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=400, detail="Only image files are supported (JPEG, PNG, WEBP, HEIC).")
+    image_bytes = await file.read()
+    if len(image_bytes) > MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=400, detail="Image is too large. Please keep it under 5 MB.")
+    try:
+        description = claude_service.extract_from_image(image_bytes, file.content_type)
+    except claude_service.ClaudeError as exc:
+        logger.error("Receipt reading failed: %s", exc)
+        raise HTTPException(status_code=500, detail="Failed to read the receipt image.") from exc
+    return {"description": description}
 
 
 @app.post("/api/split")

@@ -1,5 +1,6 @@
 fastapi>=0.110.0
 uvicorn[standard]>=0.27.0
+python-multipart>=0.0.9
 anthropic>=0.40.0
 # Pinned below 2.19: storage3>=0.13 adds a hard pyiceberg dependency that needs
 # a C/C++ build toolchain (no wheels on newer CPython). 2.18.0 avoids it.

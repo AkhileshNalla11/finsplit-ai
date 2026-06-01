@@ -29,3 +29,7 @@ class StoredSplitResponse(BaseModel):
     id: str
     result: dict[str, Any]
     created_at: str
+
+
+class ReceiptResponse(BaseModel):
+    description: str

@@ -21,6 +21,21 @@ export function correctSplit({ original_description, previous_result, correction
   return post("/api/correct", { original_description, previous_result, correction });
 }
 
+export async function uploadReceipt(file) {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch(`${BASE}/api/read-receipt`, {
+    method: "POST",
+    body: form,
+  });
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({}));
+    throw new Error(detail.detail || `Request failed (${res.status})`);
+  }
+  const data = await res.json();
+  return data.description;
+}
+
 export async function fetchSplit(id) {
   const res = await fetch(`${BASE}/api/split/${id}`);
   if (res.status === 404) return null;
