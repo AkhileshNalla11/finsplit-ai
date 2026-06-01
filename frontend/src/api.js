@@ -1,4 +1,5 @@
-const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+// .trim() strips any stray whitespace/BOM that can sneak into the env var value.
+const BASE = (import.meta.env.VITE_API_URL || "http://localhost:8000").trim();
 
 async function post(path, body) {
   const res = await fetch(`${BASE}${path}`, {
