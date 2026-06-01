@@ -6,10 +6,19 @@ const SpeechRecognition =
   typeof window !== "undefined" &&
   (window.SpeechRecognition || window.webkitSpeechRecognition);
 
+// Join committed text with a new chunk, collapsing trailing whitespace.
+const join = (a, b) => (a ? `${a.replace(/\s+$/, "")} ${b}` : b);
+
 export default function MicButton({ value, onChange, disabled }) {
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef(null);
-  const baseRef = useRef(""); // committed text so far; grows as utterances finalize
+
+  // committed: text finalized so far (seeded with the textarea value at start).
+  // tail: the current utterance's latest (longest) transcript snapshot.
+  // tailLen: length of the previous tail, to detect when a new utterance begins.
+  const committedRef = useRef("");
+  const tailRef = useRef("");
+  const tailLenRef = useRef(0);
   const shouldListenRef = useRef(false); // true while the user wants to keep dictating
 
   // Keep the latest value/onChange reachable inside the recognition callbacks.
@@ -22,31 +31,37 @@ export default function MicButton({ value, onChange, disabled }) {
     if (!SpeechRecognition) return undefined;
 
     const rec = new SpeechRecognition();
-    // One finalized utterance per result, no interim snapshots. Mobile Chrome
-    // (Android) re-delivers growing interim snapshots as separate finalized
-    // results, which duplicates text — disabling interim avoids that entirely.
-    rec.continuous = false;
-    rec.interimResults = false;
+    rec.continuous = true;
+    rec.interimResults = true;
     rec.lang = "en-IN";
 
     rec.onresult = (event) => {
-      // Append this utterance's finalized transcript exactly once, then commit
-      // it into baseRef so the next utterance appends after it.
-      let transcript = "";
-      for (let i = 0; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript;
+      // The results list can contain growing PREFIX snapshots of the same phrase
+      // (notably on Android Chrome). Concatenating them duplicates text, so we
+      // take ONLY the last entry — the most complete snapshot — and never glue
+      // the prefixes together.
+      const results = event.results;
+      const tail = results[results.length - 1][0].transcript.trim();
+
+      // A shorter tail than before means a new utterance started: commit the
+      // previous phrase before tracking the new one.
+      if (tail.length < tailLenRef.current && tailRef.current) {
+        committedRef.current = join(committedRef.current, tailRef.current);
       }
-      transcript = transcript.trim();
-      if (!transcript) return;
-      const base = baseRef.current;
-      const next = base ? `${base.replace(/\s+$/, "")} ${transcript}` : transcript;
-      baseRef.current = next;
-      onChangeRef.current(next);
+      tailRef.current = tail;
+      tailLenRef.current = tail.length;
+
+      onChangeRef.current(join(committedRef.current, tail));
     };
 
     rec.onend = () => {
-      // Recognition stops after each utterance (and on Android after pauses);
-      // restart while the user still wants to dictate.
+      // Commit the in-flight phrase so it survives a restart, then keep going
+      // while the user is still dictating (Android stops after each pause).
+      if (tailRef.current) {
+        committedRef.current = join(committedRef.current, tailRef.current);
+        tailRef.current = "";
+        tailLenRef.current = 0;
+      }
       if (shouldListenRef.current) {
         try {
           rec.start();
@@ -59,12 +74,11 @@ export default function MicButton({ value, onChange, disabled }) {
     };
 
     rec.onerror = (e) => {
-      // Permission/service failures are fatal; transient ones (no-speech,
-      // aborted) fall through to onend, which restarts if still listening.
       if (e.error === "not-allowed" || e.error === "service-not-allowed") {
         shouldListenRef.current = false;
         setListening(false);
       }
+      // Transient errors (no-speech, aborted) fall through to onend.
     };
 
     recognitionRef.current = rec;
@@ -89,7 +103,9 @@ export default function MicButton({ value, onChange, disabled }) {
       rec.stop();
       return;
     }
-    baseRef.current = valueRef.current || "";
+    committedRef.current = valueRef.current || "";
+    tailRef.current = "";
+    tailLenRef.current = 0;
     shouldListenRef.current = true;
     try {
       rec.start();
