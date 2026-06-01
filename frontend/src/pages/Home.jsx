@@ -78,7 +78,7 @@ export default function Home() {
         Fin<span>Split</span> AI
       </h1>
       <p className="tagline">
-        Describe the meal in plain English. Claude figures out the fair split.
+        Describe the tab your way. We'll split it down to the last cent.
       </p>
 
       {!result ? (
