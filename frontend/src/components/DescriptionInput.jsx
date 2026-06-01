@@ -1,6 +1,8 @@
 import LoadingProgress from "./LoadingProgress.jsx";
 
-const PLACEHOLDER =
+// One of the quick-start pills still uses this restaurant example as its text;
+// it's no longer shown as placeholder ghost text inside the empty textarea.
+const RESTAURANT_EXAMPLE =
   "Akhilesh, Kritik, Rujula, Dhruv and Shobhit went to a restaurant. " +
   "Dhruv and Kritik ate only veg (₹1300). Akhilesh, Rujula and Shobhit had both " +
   "veg and non-veg (₹2200). Kritik and Shobhit had beers — ₹400 each. Tax was ₹600.";
@@ -8,7 +10,7 @@ const PLACEHOLDER =
 const EXAMPLES = [
   {
     label: "Restaurant with mixed orders",
-    text: PLACEHOLDER,
+    text: RESTAURANT_EXAMPLE,
   },
   {
     label: "Trip with different rooms",
@@ -33,7 +35,6 @@ export default function DescriptionInput({ value, onChange, onSubmit, loading })
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={PLACEHOLDER}
         disabled={loading}
       />
 
