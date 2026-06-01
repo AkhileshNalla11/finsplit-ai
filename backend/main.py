@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import claude_service
 import supabase_service
+import transcribe_service
 from models import CorrectRequest, SplitRequest
 
 # override=True so values in backend/.env win over any empty/stale ambient vars.
@@ -50,6 +51,26 @@ MAX_DESCRIPTION_CHARS = 2000
 MAX_CORRECTION_CHARS = 500
 MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"}
+MAX_AUDIO_BYTES = 25 * 1024 * 1024  # 25 MB (Groq's limit)
+
+
+@app.post("/api/transcribe")
+async def transcribe_audio(file: UploadFile = File(...)):
+    audio_bytes = await file.read()
+    if not audio_bytes:
+        raise HTTPException(status_code=400, detail="No audio received.")
+    if len(audio_bytes) > MAX_AUDIO_BYTES:
+        raise HTTPException(status_code=400, detail="Audio clip is too large. Please keep it under 25 MB.")
+    try:
+        text = transcribe_service.transcribe(
+            audio_bytes,
+            file.filename or "audio.webm",
+            file.content_type or "audio/webm",
+        )
+    except transcribe_service.TranscribeError as exc:
+        logger.error("Transcription failed: %s", exc)
+        raise HTTPException(status_code=500, detail="Failed to transcribe the audio.") from exc
+    return {"text": text}
 
 
 @app.post("/api/read-receipt")

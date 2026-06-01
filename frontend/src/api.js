@@ -36,6 +36,26 @@ export async function uploadReceipt(file) {
   return data.description;
 }
 
+export async function transcribeAudio(blob) {
+  const form = new FormData();
+  const ext = blob.type.includes("ogg")
+    ? "ogg"
+    : blob.type.includes("mp4")
+      ? "mp4"
+      : "webm";
+  form.append("file", blob, `audio.${ext}`);
+  const res = await fetch(`${BASE}/api/transcribe`, {
+    method: "POST",
+    body: form,
+  });
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({}));
+    throw new Error(detail.detail || `Request failed (${res.status})`);
+  }
+  const data = await res.json();
+  return data.text;
+}
+
 export async function fetchSplit(id) {
   const res = await fetch(`${BASE}/api/split/${id}`);
   if (res.status === 404) return null;
