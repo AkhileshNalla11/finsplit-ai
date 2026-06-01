@@ -1,4 +1,5 @@
 import LoadingProgress from "./LoadingProgress.jsx";
+import MicButton from "./MicButton.jsx";
 
 export default function CorrectionInput({ value, onChange, onSubmit, loading }) {
   return (
@@ -19,6 +20,7 @@ export default function CorrectionInput({ value, onChange, onSubmit, loading }) 
           <button className="btn" onClick={onSubmit} disabled={!value.trim()}>
             Recalculate
           </button>
+          <MicButton value={value} onChange={onChange} disabled={loading} />
         </div>
       )}
     </div>

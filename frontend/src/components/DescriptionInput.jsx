@@ -1,4 +1,5 @@
 import LoadingProgress from "./LoadingProgress.jsx";
+import MicButton from "./MicButton.jsx";
 
 // One of the quick-start pills still uses this restaurant example as its text;
 // it's no longer shown as placeholder ghost text inside the empty textarea.
@@ -46,6 +47,7 @@ export default function DescriptionInput({ value, onChange, onSubmit, loading })
             <button className="btn" onClick={onSubmit} disabled={!value.trim()}>
               Split it
             </button>
+            <MicButton value={value} onChange={onChange} disabled={loading} />
           </div>
           <div className="examples">
             {EXAMPLES.map((ex) => (

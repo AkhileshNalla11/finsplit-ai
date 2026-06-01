@@ -111,6 +111,48 @@ textarea:focus {
   border: 1px solid var(--border);
 }
 
+/* ---------- voice input ---------- */
+.mic-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.mic-btn:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.mic-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.mic-btn.listening {
+  background: #b03b3b;
+  border-color: #b03b3b;
+  color: #fff;
+  animation: mic-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes mic-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(176, 59, 59, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(176, 59, 59, 0);
+  }
+}
+
 .row {
   display: flex;
   gap: 10px;
