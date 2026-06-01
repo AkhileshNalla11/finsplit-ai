@@ -10,6 +10,7 @@ export default function MicButton({ value, onChange, disabled }) {
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef(null);
   const baseRef = useRef(""); // textarea text captured when recording started
+  const finalRef = useRef(""); // finalized transcript accumulated this session
 
   // Keep the latest value/onChange reachable inside the recognition callbacks.
   const valueRef = useRef(value);
@@ -26,10 +27,18 @@ export default function MicButton({ value, onChange, disabled }) {
     rec.lang = "en-IN";
 
     rec.onresult = (event) => {
-      let transcript = "";
-      for (const result of event.results) {
-        transcript += result[0].transcript;
+      // Only process results new to this event; finalized ones are accumulated
+      // once into finalRef so a phrase is never concatenated more than once.
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalRef.current += result[0].transcript;
+        } else {
+          interim += result[0].transcript;
+        }
       }
+      const transcript = (finalRef.current + interim).trim();
       const base = baseRef.current;
       const joined = base ? `${base.replace(/\s+$/, "")} ${transcript}` : transcript;
       onChangeRef.current(joined);
@@ -58,6 +67,7 @@ export default function MicButton({ value, onChange, disabled }) {
       return;
     }
     baseRef.current = valueRef.current || "";
+    finalRef.current = "";
     try {
       rec.start();
       setListening(true);
