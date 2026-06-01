@@ -9,8 +9,8 @@ const SpeechRecognition =
 export default function MicButton({ value, onChange, disabled }) {
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef(null);
-  const baseRef = useRef(""); // textarea text captured when recording started
-  const finalRef = useRef(""); // finalized transcript accumulated this session
+  const baseRef = useRef(""); // committed text so far; grows as utterances finalize
+  const shouldListenRef = useRef(false); // true while the user wants to keep dictating
 
   // Keep the latest value/onChange reachable inside the recognition callbacks.
   const valueRef = useRef(value);
@@ -22,32 +22,54 @@ export default function MicButton({ value, onChange, disabled }) {
     if (!SpeechRecognition) return undefined;
 
     const rec = new SpeechRecognition();
-    rec.continuous = true;
-    rec.interimResults = true;
+    // One finalized utterance per result, no interim snapshots. Mobile Chrome
+    // (Android) re-delivers growing interim snapshots as separate finalized
+    // results, which duplicates text — disabling interim avoids that entirely.
+    rec.continuous = false;
+    rec.interimResults = false;
     rec.lang = "en-IN";
 
     rec.onresult = (event) => {
-      // Only process results new to this event; finalized ones are accumulated
-      // once into finalRef so a phrase is never concatenated more than once.
-      let interim = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i];
-        if (result.isFinal) {
-          finalRef.current += result[0].transcript;
-        } else {
-          interim += result[0].transcript;
-        }
+      // Append this utterance's finalized transcript exactly once, then commit
+      // it into baseRef so the next utterance appends after it.
+      let transcript = "";
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
       }
-      const transcript = (finalRef.current + interim).trim();
+      transcript = transcript.trim();
+      if (!transcript) return;
       const base = baseRef.current;
-      const joined = base ? `${base.replace(/\s+$/, "")} ${transcript}` : transcript;
-      onChangeRef.current(joined);
+      const next = base ? `${base.replace(/\s+$/, "")} ${transcript}` : transcript;
+      baseRef.current = next;
+      onChangeRef.current(next);
     };
-    rec.onend = () => setListening(false);
-    rec.onerror = () => setListening(false);
+
+    rec.onend = () => {
+      // Recognition stops after each utterance (and on Android after pauses);
+      // restart while the user still wants to dictate.
+      if (shouldListenRef.current) {
+        try {
+          rec.start();
+        } catch {
+          /* start() throws if it hasn't fully stopped yet — ignore */
+        }
+      } else {
+        setListening(false);
+      }
+    };
+
+    rec.onerror = (e) => {
+      // Permission/service failures are fatal; transient ones (no-speech,
+      // aborted) fall through to onend, which restarts if still listening.
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+        shouldListenRef.current = false;
+        setListening(false);
+      }
+    };
 
     recognitionRef.current = rec;
     return () => {
+      shouldListenRef.current = false;
       rec.onresult = rec.onend = rec.onerror = null;
       try {
         rec.abort();
@@ -63,11 +85,12 @@ export default function MicButton({ value, onChange, disabled }) {
     const rec = recognitionRef.current;
     if (!rec) return;
     if (listening) {
+      shouldListenRef.current = false;
       rec.stop();
       return;
     }
     baseRef.current = valueRef.current || "";
-    finalRef.current = "";
+    shouldListenRef.current = true;
     try {
       rec.start();
       setListening(true);
