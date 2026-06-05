@@ -45,10 +45,12 @@ export default function SplitView() {
   const r = state.result;
   return (
     <div className="container">
-      <h1 className="brand">
-        Fin<span>Split</span> AI
-      </h1>
-      <p className="tagline">A shared split.</p>
+      <div className="hero" style={{ paddingBottom: 16 }}>
+        <h1 className="brand">
+          Fin<span>Split</span> AI
+        </h1>
+        <p className="tagline">A shared split.</p>
+      </div>
 
       <AssumptionsBox oneLiner={r.oneLiner} assumptions={r.assumptions} />
       <BreakdownTable items={r.items} totalBill={r.totalBill} />

@@ -74,57 +74,71 @@ export default function Home() {
 
   return (
     <div className="container">
-      <h1 className="brand">
-        Fin<span>Split</span> AI
-      </h1>
-      <p className="tagline">
-        Describe the tab your way. We'll split it down to the last cent.
-      </p>
+      <div className="hero">
+        <h1 className="brand">
+          Fin<span>Split</span> AI
+        </h1>
+        <p className="tagline">
+          Describe the tab your way. We'll split it down to the last cent.
+        </p>
+      </div>
 
       {!result ? (
         <>
-          <DescriptionInput
-            value={description}
-            onChange={setDescription}
-            onSubmit={handleSplit}
-            loading={loading}
-          />
+          <div className="input-card">
+            <DescriptionInput
+              value={description}
+              onChange={setDescription}
+              onSubmit={handleSplit}
+              loading={loading}
+            />
+          </div>
           {error && <div className="error">{error}</div>}
         </>
       ) : (
         <>
-          <AssumptionsBox oneLiner={result.oneLiner} assumptions={result.assumptions} />
-          <BreakdownTable items={result.items} totalBill={result.totalBill} />
-          <PersonCards perPerson={result.perPerson} people={result.people} />
-          <SettleUp
-            settlements={result.settlements}
-            settlementsDetailed={result.settlementsDetailed}
-            paidBy={result.paidBy}
-            people={result.people}
-          />
+          <div className="fade-up delay-1">
+            <AssumptionsBox oneLiner={result.oneLiner} assumptions={result.assumptions} />
+          </div>
+          <div className="fade-up delay-2">
+            <BreakdownTable items={result.items} totalBill={result.totalBill} />
+          </div>
+          <div className="fade-up delay-3">
+            <PersonCards perPerson={result.perPerson} people={result.people} />
+          </div>
+          <div className="fade-up delay-4">
+            <SettleUp
+              settlements={result.settlements}
+              settlementsDetailed={result.settlementsDetailed}
+              paidBy={result.paidBy}
+              people={result.people}
+            />
+          </div>
 
-          <CorrectionInput
-            value={correction}
-            onChange={setCorrection}
-            onSubmit={handleCorrect}
-            loading={correcting}
-          />
-          {error && <div className="error">{error}</div>}
+          <div className="fade-up delay-5">
+            <CorrectionInput
+              value={correction}
+              onChange={setCorrection}
+              onSubmit={handleCorrect}
+              loading={correcting}
+            />
+            {error && <div className="error">{error}</div>}
 
-          <div className="share">
-            {shareUrl ? (
-              <>
-                <span className="url">{shareUrl}</span>
-                <button className="btn btn-secondary" onClick={copyLink}>
-                  {copied ? "Copied!" : "Copy link"}
-                </button>
-              </>
-            ) : (
-              <span className="url">Sharing unavailable — storage is offline.</span>
-            )}
-            <button className="btn btn-secondary" onClick={reset}>
-              New split
-            </button>
+            <div className="share">
+              {shareUrl ? (
+                <>
+                  <span className="url">{shareUrl}</span>
+                  <button className="btn btn-secondary" onClick={copyLink}>
+                    {copied ? "Copied!" : "Copy link"}
+                  </button>
+                </>
+              ) : (
+                <span className="url">Sharing unavailable — storage is offline.</span>
+              )}
+              <button className="btn btn-secondary" onClick={reset}>
+                New split
+              </button>
+            </div>
           </div>
         </>
       )}
