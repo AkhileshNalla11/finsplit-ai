@@ -234,7 +234,9 @@ def _display_item(item: dict, total: float, alloc: dict[str, float]) -> dict:
 
     label = item.get("label", "item")
     if _is_percentage(item):
-        label = f"{label} ({round(_rate_fraction(item) * 100)}%)"
+        pct_str = f"({round(_rate_fraction(item) * 100)}%)"
+        if pct_str not in label:
+            label = f"{label} {pct_str}"
     denom = len(consumers) if consumers else 1
     out = {
         "label": label,
