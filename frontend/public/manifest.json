@@ -1,0 +1,17 @@
+{
+  "name": "FinSplit AI",
+  "short_name": "FinSplit",
+  "description": "Describe a group bill in plain English. FinSplit AI figures out the fair split.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#16a34a",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

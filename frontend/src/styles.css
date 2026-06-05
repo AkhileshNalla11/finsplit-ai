@@ -661,6 +661,27 @@ tbody tr:hover td {
   white-space: nowrap;
 }
 
+.btn-upi {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: #f0fdf4;
+  border: 1.5px solid #16a34a;
+  color: #15803d;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background 0.15s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.btn-upi:hover {
+  background: #dcfce7;
+  transform: translateY(-1px);
+}
+
 /* ── Correction + share ───────────────────────────────────────────── */
 
 .correction {

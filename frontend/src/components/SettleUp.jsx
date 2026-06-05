@@ -52,31 +52,42 @@ export default function SettleUp({
       )}
 
       <div className="settle-list">
-        {list.map((t, i) => (
-          <div className="settle-row" key={i}>
-            <span className="settle-party">
-              <span
-                className="avatar avatar-sm"
-                style={{ background: avatarColor(t.from, people) }}
-              >
-                {initials(t.from)}
+        {list.map((t, i) => {
+          const upiNote = encodeURIComponent(`FinSplit: ${t.from} pays ${t.to}`);
+          const upiHref = `upi://pay?am=${t.amount}&tn=${upiNote}&cu=INR`;
+          return (
+            <div className="settle-row" key={i}>
+              <span className="settle-party">
+                <span
+                  className="avatar avatar-sm"
+                  style={{ background: avatarColor(t.from, people) }}
+                >
+                  {initials(t.from)}
+                </span>
+                {t.from}
               </span>
-              {t.from}
-            </span>
-            <span className="settle-arrow">→</span>
-            <span className="settle-party">
-              <span
-                className="avatar avatar-sm"
-                style={{ background: avatarColor(t.to, people) }}
-              >
-                {initials(t.to)}
+              <span className="settle-arrow">→</span>
+              <span className="settle-party">
+                <span
+                  className="avatar avatar-sm"
+                  style={{ background: avatarColor(t.to, people) }}
+                >
+                  {initials(t.to)}
+                </span>
+                {t.to}
               </span>
-              {t.to}
-            </span>
-            {t.for && <span className="settle-for">{t.for}</span>}
-            <span className="settle-amount">{rupees(t.amount)}</span>
-          </div>
-        ))}
+              {t.for && <span className="settle-for">{t.for}</span>}
+              <span className="settle-amount">{rupees(t.amount)}</span>
+              <a
+                href={upiHref}
+                className="btn-upi"
+                title="Pay via any UPI app"
+              >
+                Pay via UPI
+              </a>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
