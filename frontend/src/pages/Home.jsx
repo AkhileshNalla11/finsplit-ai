@@ -6,6 +6,8 @@ import BreakdownTable from "../components/BreakdownTable.jsx";
 import PersonCards from "../components/PersonCards.jsx";
 import SettleUp from "../components/SettleUp.jsx";
 import CorrectionInput from "../components/CorrectionInput.jsx";
+import SplitHistory from "../components/SplitHistory.jsx";
+import { saveToHistory, getHistory } from "../utils/splitHistory.js";
 
 function WhatsAppIcon() {
   return (
@@ -27,6 +29,12 @@ export default function Home() {
   const [correcting, setCorrecting] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const [history, setHistory] = useState(() => getHistory());
+
+  function refreshHistory() {
+    setHistory(getHistory());
+  }
+
   async function handleSplit() {
     setLoading(true);
     setError("");
@@ -34,6 +42,9 @@ export default function Home() {
       const data = await createSplit(description);
       setResult(data.result);
       setSplitId(data.id);
+      const url = data.id ? `${window.location.origin}/split/${data.id}` : null;
+      saveToHistory({ id: data.id, description, result: data.result, shareUrl: url });
+      refreshHistory();
     } catch (e) {
       setError(e.message || "Something went wrong. Try again.");
     } finally {
@@ -54,6 +65,9 @@ export default function Home() {
       setSplitId(data.id);
       setCorrection("");
       setCopied(false);
+      const url = data.id ? `${window.location.origin}/split/${data.id}` : null;
+      saveToHistory({ id: data.id, description, result: data.result, shareUrl: url });
+      refreshHistory();
     } catch (e) {
       setError(e.message || "Couldn't apply the correction. Try again.");
     } finally {
@@ -68,6 +82,16 @@ export default function Home() {
     setCorrection("");
     setError("");
     setCopied(false);
+  }
+
+  function handleRestore(entry) {
+    setDescription(entry.description || "");
+    setResult(entry.result);
+    setSplitId(entry.id);
+    setCopied(false);
+    setCorrection("");
+    setError("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   const shareUrl = splitId ? `${window.location.origin}/split/${splitId}` : null;
@@ -119,6 +143,11 @@ export default function Home() {
             />
           </div>
           {error && <div className="error">{error}</div>}
+          <SplitHistory
+            history={history}
+            onRestore={handleRestore}
+            onHistoryChange={refreshHistory}
+          />
         </>
       ) : (
         <>
@@ -141,6 +170,7 @@ export default function Home() {
               settlementsDetailed={result.settlementsDetailed}
               paidBy={result.paidBy}
               people={result.people}
+              splitId={splitId}
             />
           </div>
 

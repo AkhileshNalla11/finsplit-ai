@@ -60,6 +60,7 @@ export default function SplitView() {
         settlementsDetailed={r.settlementsDetailed}
         paidBy={r.paidBy}
         people={r.people}
+        splitId={id}
       />
 
       <div className="footer">
