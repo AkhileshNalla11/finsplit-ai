@@ -59,6 +59,7 @@ export default function DescriptionInput({ value, onChange, onSubmit, loading })
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={busy}
+        placeholder="e.g. Raj, Meera and Arjun had lunch. Raj had a burger ₹320, Meera had pasta ₹280, Arjun had both. 10% service charge. Meera paid the whole bill."
       />
 
       {loading ? (

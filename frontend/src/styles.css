@@ -97,6 +97,77 @@ body {
   font-weight: 400;
 }
 
+/* ── How it works ─────────────────────────────────────────────────── */
+
+.how-it-works {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.step-arrow {
+  color: var(--border-strong);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+/* ── Total callout ────────────────────────────────────────────────── */
+
+.total-callout {
+  margin: 0 0 16px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.total-callout strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* ── WhatsApp share button ────────────────────────────────────────── */
+
+.btn-wa {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  padding: 13px 22px;
+  margin-top: 20px;
+  border: none;
+  border-radius: var(--r);
+  background: #25d366;
+  color: #fff;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+  box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
+}
+
+.btn-wa:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.38);
+  color: #fff;
+  text-decoration: none;
+}
+
 /* ── Input card ───────────────────────────────────────────────────── */
 
 .input-card {

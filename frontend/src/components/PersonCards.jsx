@@ -1,10 +1,15 @@
 import { rupees, initials, avatarColor } from "../format.js";
 
-export default function PersonCards({ perPerson = {}, people = [] }) {
+export default function PersonCards({ perPerson = {}, people = [], totalBill }) {
   const names = people.length ? people : Object.keys(perPerson);
   return (
     <div>
       <div className="section-title">Who owes what</div>
+      {totalBill > 0 && (
+        <p className="total-callout">
+          Total bill <strong>{rupees(totalBill)}</strong> split {names.length} way{names.length !== 1 ? "s" : ""}
+        </p>
+      )}
       <div className="cards">
         {names.map((name) => {
           const color = avatarColor(name, names);
